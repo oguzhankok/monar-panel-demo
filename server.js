@@ -36,43 +36,44 @@ mongoose.connect(process.env.MONGO_URI)
   .catch((err) => console.error('❌ MongoDB Bağlantı Hatası:', err));
 const seedDemoUsers = async () => {
   try {
-    const User = require('./models/User'); // User modelinizin yolu
-    const bcrypt = require('bcryptjs'); // veya require('bcrypt')
+    const User = require('./models/User'); // User model yolunuz
+    const bcrypt = require('bcryptjs'); // veya 'bcrypt'
+
+    // 1. Varsa eski/hatalı demo kullanıcıları tamamen temizle
+    const demoEmails = [
+      'broker@remax-monar.com',
+      'ofis@remax-monar.com',
+      'danisman@remax-monar.com'
+    ];
+    await User.deleteMany({ email: { $in: demoEmails } });
+
+    // 2. Şifreyi tek sefer hashle
+    const hashedPassword = await bcrypt.hash('demo123', 10);
 
     const demoUsers = [
       {
         ad_soyad: 'Demo Broker',
         email: 'broker@remax-monar.com',
-        password: 'demo123',
+        password: hashedPassword,
         role: 'ADMİN'
       },
       {
         ad_soyad: 'Demo Ofis',
         email: 'ofis@remax-monar.com',
-        password: 'demo123',
+        password: hashedPassword,
         role: 'HALF-ADMİN'
       },
       {
         ad_soyad: 'Demo Danışman',
         email: 'danisman@remax-monar.com',
-        password: 'demo123',
+        password: hashedPassword,
         role: 'MEMBER'
       }
     ];
 
-    for (const u of demoUsers) {
-      const exists = await User.findOne({ email: u.email });
-      if (!exists) {
-        // NOT: Eğer models/User.js dosyanızda pre('save') ile şifre otomatik hashleniyorsa
-        // doğrudan User.create(u) yapabilirsiniz. Eğer hashlenmiyorsa alttaki satır hashler:
-        const hashedPassword = await bcrypt.hash(u.password, 10);
-        await User.create({
-          ...u,
-          password: hashedPassword
-        });
-        console.log(`✅ Demo kullanıcı oluşturuldu: ${u.email} (${u.role})`);
-      }
-    }
+    // insertMany kullanılır; insertMany pre('save') hook'unu tetiklemez, çift hashlemeyi önler
+    await User.insertMany(demoUsers);
+    console.log('✅ 3 Demo kullanıcı başarıyla sıfırlandı ve oluşturuldu.');
   } catch (error) {
     console.error('Demo kullanıcı oluşturma hatası:', error.message);
   }
