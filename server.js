@@ -34,7 +34,59 @@ app.use('/api/muteahhitler', muteahhitRoutes);
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB Atlas Bağlantısı Başarılı!'))
   .catch((err) => console.error('❌ MongoDB Bağlantı Hatası:', err));
+const seedDemoUsers = async () => {
+  try {
+    const User = require('./models/User'); // User modelinizin yolu
+    const bcrypt = require('bcryptjs'); // veya require('bcrypt')
 
+    const demoUsers = [
+      {
+        ad_soyad: 'Demo Broker',
+        email: 'broker@remax-monar.com',
+        password: 'demo123',
+        role: 'ADMİN'
+      },
+      {
+        ad_soyad: 'Demo Ofis',
+        email: 'ofis@remax-monar.com',
+        password: 'demo123',
+        role: 'HALF-ADMİN'
+      },
+      {
+        ad_soyad: 'Demo Danışman',
+        email: 'danisman@remax-monar.com',
+        password: 'demo123',
+        role: 'MEMBER'
+      }
+    ];
+
+    for (const u of demoUsers) {
+      const exists = await User.findOne({ email: u.email });
+      if (!exists) {
+        // NOT: Eğer models/User.js dosyanızda pre('save') ile şifre otomatik hashleniyorsa
+        // doğrudan User.create(u) yapabilirsiniz. Eğer hashlenmiyorsa alttaki satır hashler:
+        const hashedPassword = await bcrypt.hash(u.password, 10);
+        await User.create({
+          ...u,
+          password: hashedPassword
+        });
+        console.log(`✅ Demo kullanıcı oluşturuldu: ${u.email} (${u.role})`);
+      }
+    }
+  } catch (error) {
+    console.error('Demo kullanıcı oluşturma hatası:', error.message);
+  }
+};
+
+// MongoDB bağlantısı başarılı olduğu anda çağırın:
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log('MongoDB Bağlandı');
+    seedDemoUsers(); // Demo kullanıcıları oluştur
+  })
+  .catch((err) => {
+    console.error('MongoDB Bağlantı Hatası:', err);
+  });
 // Ana Test Rotası
 const path = require('path');
 
