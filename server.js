@@ -34,50 +34,6 @@ app.use('/api/muteahhitler', muteahhitRoutes);
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB Atlas Bağlantısı Başarılı!'))
   .catch((err) => console.error('❌ MongoDB Bağlantı Hatası:', err));
-const seedDemoUsers = async () => {
-  try {
-    const User = require('./models/User'); // User model yolunuz
-    const bcrypt = require('bcryptjs'); // veya 'bcrypt'
-
-    // 1. Varsa eski/hatalı demo kullanıcıları tamamen temizle
-    const demoEmails = [
-      'broker@remax-monar.com',
-      'ofis@remax-monar.com',
-      'danisman@remax-monar.com'
-    ];
-    await User.deleteMany({ email: { $in: demoEmails } });
-
-    // 2. Şifreyi tek sefer hashle
-    const hashedPassword = await bcrypt.hash('demo123', 10);
-
-    const demoUsers = [
-      {
-        ad_soyad: 'Demo Broker',
-        email: 'broker@remax-monar.com',
-        password: hashedPassword,
-        role: 'ADMİN'
-      },
-      {
-        ad_soyad: 'Demo Ofis',
-        email: 'ofis@remax-monar.com',
-        password: hashedPassword,
-        role: 'HALF-ADMİN'
-      },
-      {
-        ad_soyad: 'Demo Danışman',
-        email: 'danisman@remax-monar.com',
-        password: hashedPassword,
-        role: 'MEMBER'
-      }
-    ];
-
-    // insertMany kullanılır; insertMany pre('save') hook'unu tetiklemez, çift hashlemeyi önler
-    await User.insertMany(demoUsers);
-    console.log('✅ 3 Demo kullanıcı başarıyla sıfırlandı ve oluşturuldu.');
-  } catch (error) {
-    console.error('Demo kullanıcı oluşturma hatası:', error.message);
-  }
-};
 
 // MongoDB bağlantısı başarılı olduğu anda çağırın:
 mongoose.connect(process.env.MONGO_URI)
