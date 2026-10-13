@@ -12,13 +12,24 @@ router.route('/')
   })
   .post(protect, async (req, res) => {
     try {
+      const data = { ...req.body };
+      // Alan adı senkronizasyonu
+      if (data.yetkili_kisi && !data.yetkili_ad_soyad) {
+        data.yetkili_ad_soyad = data.yetkili_kisi;
+      }
+      if (data.yetkili_ad_soyad && !data.yetkili_kisi) {
+        data.yetkili_kisi = data.yetkili_ad_soyad;
+      }
+
       const muteahhit = await Muteahhit.create({
-        ...req.body,
+        ...data,
         ekleyen_kullanici_id: req.user.id,
         ekleyen_kullanici_ad: req.user.ad_soyad
       });
       res.status(201).json(muteahhit);
-    } catch (error) { res.status(400).json({ message: error.message }); }
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
   });
 
 router.route('/:id')
